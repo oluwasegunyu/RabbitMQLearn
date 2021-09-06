@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:rabbit="http://www.springframework.org/schema/rabbit"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                        http://www.springframework.org/schema/beans/spring-beans.xsd
+                        http://www.springframework.org/schema/context
+                        http://www.springframework.org/schema/context/spring-context.xsd
+                        http://www.springframework.org/schema/rabbit
+                        http://www.springframework.org/schema/rabbit/spring-rabbit.xsd">
+
+    <context:property-placeholder location="classpath:rabbitmq.properties"/>
+    <!-- rabbitMQ配置  BEGIN-->
+    <rabbit:connection-factory id="connectionFactory"
+                               username="${rabbitmq.username}"
+                               password="${rabbitmq.password}"
+                               virtual-host="${rabbitmq.virtual-host}"/>
+
+    <rabbit:admin connection-factory="connectionFactory"/>
+
+    <!-- 声明队列 -->
+    <rabbit:queue id="spring_queue" name="spring_queue" auto-declare="true"/>
+
+    <rabbit:queue id="spring_fanout_queue1" name="spring_fanout_queue1" auto-declare="true"/>
+    <rabbit:queue id="spring_fanout_queue2" name="spring_fanout_queue2" auto-declare="true"/>
+    <!-- 绑定交换机和队列 -->
+    <rabbit:fanout-exchange id="spring_fanout_exchange" name="spring_fanout_exchange" auto-declare="true" >
+        <rabbit:bindings>
+            <rabbit:binding queue="spring_fanout_queue1" />
+            <rabbit:binding queue="spring_fanout_queue2" />
+        </rabbit:bindings>
+    </rabbit:fanout-exchange>
+
+    <rabbit:queue id="spring_topic_queue_star" name="spring_topic_queue_star" auto-declare="true"/>
+    <rabbit:queue id="spring_topic_queue_well" name="spring_topic_queue_well" auto-declare="true"/>
+    <rabbit:queue id="spring_topic_queue_well2" name="spring_topic_queue_well2" auto-declare="true"/>
+
+    <rabbit:topic-exchange id="spring_topic_exchange" name="spring_topic_exchange" auto-declare="true">
+        <rabbit:bindings>
+            <rabbit:binding pattern="*" queue="spring_topic_queue_star"></rabbit:binding>
+            <rabbit:binding pattern="#" queue="spring_topic_queue_well"></rabbit:binding>
+            <rabbit:binding pattern="myhost.#" queue="spring_topic_queue_well2"></rabbit:binding>
+        </rabbit:bindings>
+    </rabbit:topic-exchange>
+
+    <!-- 创建rabbitTemplate 消息模板类 -->
+    <rabbit:template id="rabbitTemplate" connection-factory="connectionFactory"/>
+    <!-- rabbitMQ配置  END-->
+
+
+
+</beans>
